@@ -1,17 +1,23 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    Total Items: {{ users.total }}<br>
+    Total Pages: {{ users.totalPages }}<br>
+    Loading: {{ users.loading }}<br>
+    {{ users.items }}
+    {{ users.page }}
+    <button @click="users.page++">Increase</button>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { usePagination } from './composables/usePagination'
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
+  setup () {
+    const users = usePagination('users', { page: 1, pageSize: 2 })
+
+    return { users }
   }
 }
 </script>
