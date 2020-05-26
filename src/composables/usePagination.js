@@ -30,7 +30,10 @@ export function usePagination (name, opts) {
     const registry = state.resources[name].registry
     const offset = page.value * pageSize.value - pageSize.value
 
-    if (page.value < 1) page.value = 1
+    if (page.value < 1) {
+      page.value = 1
+      return
+    }
 
     if (state.resources[name].registry.value && totalPages.value < page.value) {
       page.value = totalPages.value
