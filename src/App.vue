@@ -3,9 +3,10 @@
     Total Items: {{ users.total }}<br>
     Total Pages: {{ users.totalPages }}<br>
     Loading: {{ users.loading }}<br>
-    {{ users.items }}
-    {{ users.page }}
-    <button @click="users.page++">Increase</button>
+    Items: {{ users.items }}<br>
+    Page: {{ users.page }}<br>
+    <button @click="users.page--">Previous Page</button>
+    <button @click="users.page++">Next Page</button>
   </div>
 </template>
 
