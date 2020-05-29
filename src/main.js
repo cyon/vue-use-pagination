@@ -15,7 +15,6 @@ const users = [
 
 createResource('users', async (opts) => {
   await sleep(2000)
-  console.log('fetching users', opts)
   const offset = opts.page * opts.pageSize - opts.pageSize
 
   return {
