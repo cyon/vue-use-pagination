@@ -12,54 +12,80 @@ export function createResource (name, fetchPageFn, opts) {
   }
 }
 
-export function usePagination (name, opts) {
+export function usePagination (nameOrFn, opts) {
+  const localRegistry = ref(null)
+
+  const getRegistry = () => {
+    if (typeof nameOrFn === 'function') {
+      return localRegistry
+    }
+    if (state.resources[nameOrFn]) {
+      return state.resources[nameOrFn].registry
+    }
+    return ref(null)
+  }
+
+  const getFetcherFn = () => {
+    if (typeof nameOrFn === 'function') return nameOrFn
+    if (state.resources[nameOrFn]) return state.resources[nameOrFn].fn
+    return null
+  }
+
   const page = ref(null)
   const pageSize = ref(null)
-  const items = ref([])
+
+  const offset = computed(() => {
+    if (page.value === null || pageSize.value === null) return 0
+    return page.value * pageSize.value - pageSize.value
+  })
+  const items = computed(() => {
+    if (!getRegistry().value || getRegistry().value.length === 0) return []
+
+    const partition = getRegistry().value.slice(offset.value, offset.value + pageSize.value)
+    if (partition.includes(undefined)) return []
+
+    return partition
+  })
+
   const loading = ref(false)
   const total = computed(() => {
-    const registryValue = state.resources[name].registry.value
-    if (!registryValue) return 0
-    return registryValue.length
+    if (!getRegistry().value) return 0
+    return getRegistry().value.length
   })
   const totalPages = computed(() => {
     return Math.ceil(total.value / pageSize.value)
   })
 
   watch([page, pageSize], async () => {
-    const registry = state.resources[name].registry
-    const offset = page.value * pageSize.value - pageSize.value
+    if (typeof nameOrFn === 'string' && !state.resources[nameOrFn]) return
 
     if (page.value < 1) {
       page.value = 1
       return
     }
 
-    if (state.resources[name].registry.value && totalPages.value < page.value) {
+    if (getRegistry().value && totalPages.value < page.value) {
       page.value = totalPages.value
       return
     }
 
     const fetchData = async () => {
       loading.value = true
-      const result = await state.resources[name].fn({ page: page.value, pageSize: pageSize.value })
-      if (registry.value === null || result.total !== registry.value.length) registry.value = new Array(result.total)
+      const result = await getFetcherFn()({ page: page.value, pageSize: pageSize.value })
+      if (getRegistry().value === null || result.total !== getRegistry().value.length) getRegistry().value = new Array(result.total)
       result.items.forEach((item, i) => {
-        registry.value[offset + i] = item
+        getRegistry().value[offset.value + i] = item
       })
-      items.value = registry.value.slice(offset, offset + pageSize.value)
       loading.value = false
-      if (state.resources[name].registry.value && totalPages.value < page.value) page.value = totalPages.value
+      if (getRegistry().value && totalPages.value < page.value) page.value = totalPages.value
     }
 
-    if (items.value.length === 0) {
+    if (!getRegistry().value || getRegistry().value.length === 0) {
       return fetchData()
     }
 
-    const partition = registry.value.slice(offset, offset + pageSize.value)
+    const partition = getRegistry().value.slice(offset.value, offset.value + pageSize.value)
     if (partition.includes(undefined)) return fetchData()
-
-    items.value = partition
   })
 
   page.value = opts.page || 1
