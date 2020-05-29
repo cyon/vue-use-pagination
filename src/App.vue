@@ -8,16 +8,21 @@
     <button @click="users.page--">Previous Page</button>
     <button @click="users.page++">Next Page</button>
     <br><br>
+    Count: {{ count }}<br>
+    <button @click="count++">Increase Count</button>
   </div>
 </template>
 
 <script>
+import { ref, reactive } from 'vue'
 import { usePagination } from './composables/usePagination'
 
 export default {
   name: 'App',
   setup () {
     // const users = usePagination('users', { page: 1, pageSize: 2 })
+
+    const count = ref(1)
 
     const usersArray = [
       'a',
@@ -34,11 +39,17 @@ export default {
 
       return {
         total: usersArray.length,
-        items: usersArray.slice(offset, offset + opts.pageSize)
+        items: usersArray.slice(offset, offset + opts.pageSize).map(user => user + opts.args.count.value)
       }
-    }, { page: 1, pageSize: 2 })
+    }, {
+      page: 1,
+      pageSize: 2,
+      args: reactive({
+        count
+      })
+    })
 
-    return { users }
+    return { users, count }
   }
 }
 </script>
