@@ -15,7 +15,7 @@
 
 <script>
 import { ref, reactive } from 'vue'
-import { usePagination } from '../../'
+import { usePagination } from '../../../'
 
 export default {
   name: 'App',

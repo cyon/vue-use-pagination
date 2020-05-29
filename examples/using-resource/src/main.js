@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import { createResource } from '../../'
+import { createResource } from '../../../'
 
 const users = [
   'a',
