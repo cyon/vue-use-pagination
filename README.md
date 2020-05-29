@@ -82,3 +82,33 @@ useUsers ({ page = 1, pageSize = 10 }) {
 
   return usePagination(fetch, { page, pageSize })
 }
+```
+
+## Passing arguments
+
+Often you'll have to pass different kinds of arguments or parameters to a resource. Think filters, query parameters or different headers, just to name a few.
+
+This can be done with the `args` parameter inside `usePagination`:
+
+```javascript
+import { reactive } from 'vue'
+import { usePagination } from 'vue-use-pagination'
+
+export default {
+  setup () {
+    const category = ref('all')
+
+    const users = usePagination('users', {
+      page: 1,
+      pageSize: 10,
+      args: reactive({
+        category
+      })
+    })
+
+    return { users }
+  }
+}
+```
+
+Note that `args` must be a `reactive` object, so changes to it can be tracked.
