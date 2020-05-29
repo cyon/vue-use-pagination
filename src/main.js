@@ -19,7 +19,7 @@ createResource('users', async (opts) => {
 
   return {
     total: users.length,
-    items: users.slice(offset, offset + opts.pageSize)
+    items: users.slice(offset, offset + opts.pageSize).map(user => user + opts.args.count.value)
   }
 })
 
