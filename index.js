@@ -92,7 +92,12 @@ export function usePagination (nameOrFn, opts) {
       if (!getRegistry()[getRegistryKey()] || result.total !== getRegistry()[getRegistryKey()].length) {
         getRegistry()[getRegistryKey()] = new Array(result.total)
       }
-      result.items.forEach((item, i) => {
+      const items = result.items || result.data
+      if (!items) {
+        throw new Error('No `items` found in result')
+      }
+
+      items.forEach((item, i) => {
         getRegistry()[getRegistryKey()][offset.value + i] = item
       })
       loading.value = false
