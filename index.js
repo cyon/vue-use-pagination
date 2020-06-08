@@ -95,6 +95,9 @@ export function usePagination (nameOrFn, opts) {
   const items = computed(() => {
     if (!getRegistry() || getRegistry().length === 0) return []
 
+    // eslint-disable-next-line
+    const key = getRegistryKey() // somehow it only tracks our changes if this is here
+
     if (!getRegistry()[getRegistryKey()]) return []
     const partition = getRegistry()[getRegistryKey()].slice(offset.value, offset.value + pageSize.value)
     if (partition.includes(undefined)) return []
