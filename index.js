@@ -21,6 +21,13 @@ export function resource (name) {
       Object.keys(state.resources[name].registry).forEach(key => delete state.resources[name].registry[key])
     },
     async fetchRange ({ page = 1, pageSize = 10, args = null }) {
+      const partition = getPartition(name, { page, pageSize, args })
+      if (!partition || partition.includes(undefined)) {
+        const items = await fetchData(name, { page, pageSize, args })
+        return items
+      }
+
+      return partition
     }
   }
 }
@@ -51,6 +58,8 @@ function getPartition (nameOrFn, { page, pageSize, args = null, localRegistry = 
   const registryKey = args ? hash(args) : 'default'
   const registry = typeof nameOrFn === 'function' ? localRegistry : state.resources[nameOrFn].registry
   const offset = page * pageSize - pageSize
+
+  if (!registry[registryKey]) return null
 
   return registry[registryKey].slice(offset, offset + pageSize)
 }
