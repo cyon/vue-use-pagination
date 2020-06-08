@@ -16,10 +16,11 @@ const users = [
 createResource('users', async (opts) => {
   await sleep(2000)
   const offset = opts.page * opts.pageSize - opts.pageSize
+  const count = opts.args.count.value || opts.args.count
 
   return {
     total: users.length,
-    items: users.slice(offset, offset + opts.pageSize).map(user => user + opts.args.count.value)
+    items: users.slice(offset, offset + opts.pageSize).map(user => user + count)
   }
 })
 
