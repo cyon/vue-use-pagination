@@ -149,7 +149,7 @@ export function usePagination (nameOrFn, opts) {
       args: args ? toRaw(args) : null,
       localRegistry
     })
-    if (partition.includes(undefined)) return wrapFetchData()
+    if (!partition || partition.includes(undefined)) return wrapFetchData()
   })
 
   page.value = opts.page || 1
