@@ -19,9 +19,33 @@ export function resource (name) {
   return {
     refresh () {
       Object.keys(state.resources[name].registry).forEach(key => delete state.resources[name].registry[key])
+    },
+    async fetchRange ({ page = 1, pageSize = 10, args = null }) {
     }
   }
 }
+
+async function fetchData (nameOrFn, { page, pageSize, args = null, localRegistry = null }) {
+  const fetcher = typeof nameOrFn === 'function' ? nameOrFn : state.resources[nameOrFn].fn
+  const registryKey = args ? hash(args) : 'default'
+  const registry = typeof nameOrFn === 'function' ? localRegistry : state.resources[nameOrFn].registry
+  const offset = page * pageSize - pageSize
+
+  const result = await fetcher({ page, pageSize, args })
+  if (!registry[registryKey] || result.total !== registry[registryKey].length) {
+    registry[registryKey] = new Array(result.total)
+  }
+  const items = result.items || result.data
+  if (!items) {
+    throw new Error('No `items` found in result')
+  }
+
+  items.forEach((item, i) => {
+    registry[registryKey][offset + i] = item
+  })
+}
+
+// function getPartition () {}
 
 export function usePagination (nameOrFn, opts) {
   const localRegistry = reactive({})
@@ -39,12 +63,6 @@ export function usePagination (nameOrFn, opts) {
 
   const getRegistryKey = () => {
     return opts.args ? hash(toRaw(opts.args)) : 'default'
-  }
-
-  const getFetcherFn = () => {
-    if (typeof nameOrFn === 'function') return nameOrFn
-    if (state.resources[nameOrFn]) return state.resources[nameOrFn].fn
-    return null
   }
 
   const page = ref(null)
@@ -86,30 +104,30 @@ export function usePagination (nameOrFn, opts) {
       return
     }
 
-    const fetchData = async () => {
+    const wrapFetchData = async () => {
       loading.value = true
-      const result = await getFetcherFn()({ page: page.value, pageSize: pageSize.value, args: opts.args ? toRaw(opts.args) : null })
-      if (!getRegistry()[getRegistryKey()] || result.total !== getRegistry()[getRegistryKey()].length) {
-        getRegistry()[getRegistryKey()] = new Array(result.total)
-      }
-      const items = result.items || result.data
-      if (!items) {
-        throw new Error('No `items` found in result')
+      try {
+        await fetchData(nameOrFn, {
+          page: page.value,
+          pageSize: pageSize.value,
+          args: opts.args ? toRaw(opts.args) : null,
+          localRegistry
+        })
+      } catch (err) {
+        loading.value = false
+        if (process.env.NODE_ENV === 'development') console.error('Error occured', err)
       }
 
-      items.forEach((item, i) => {
-        getRegistry()[getRegistryKey()][offset.value + i] = item
-      })
       loading.value = false
       if (getRegistry()[getRegistryKey()] && totalPages.value < page.value) page.value = totalPages.value
     }
 
     if (!getRegistry()[getRegistryKey()] || getRegistry()[getRegistryKey()].length === 0) {
-      return fetchData()
+      return wrapFetchData()
     }
 
     const partition = getRegistry()[getRegistryKey()].slice(offset.value, offset.value + pageSize.value)
-    if (partition.includes(undefined)) return fetchData()
+    if (partition.includes(undefined)) return wrapFetchData()
   })
 
   page.value = opts.page || 1
