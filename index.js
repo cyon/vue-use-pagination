@@ -2,7 +2,7 @@ import { watch, ref, reactive, toRaw, computed } from 'vue'
 import hash from 'object-hash'
 
 const state = {
-  resources: {}
+  resources: reactive({})
 }
 
 export function createResource (name, fetchPageFn, opts) {
@@ -10,6 +10,16 @@ export function createResource (name, fetchPageFn, opts) {
     lastFetched: null,
     registry: reactive({}),
     fn: fetchPageFn
+  }
+}
+
+export function resource (name) {
+  if (!state.resources[name]) throw new Error(`No resource with the name \`${name}\` found`)
+
+  return {
+    refresh () {
+      Object.keys(state.resources[name].registry).forEach(key => delete state.resources[name].registry[key])
+    }
   }
 }
 
@@ -63,7 +73,7 @@ export function usePagination (nameOrFn, opts) {
     return Math.ceil(total.value / pageSize.value)
   })
 
-  watch([page, pageSize, args], async () => {
+  watch([page, pageSize, args, state.resources], async () => {
     if (typeof nameOrFn === 'string' && !state.resources[nameOrFn]) return
 
     if (page.value < 1) {
