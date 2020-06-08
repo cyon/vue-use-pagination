@@ -39,6 +39,9 @@ async function fetchData (nameOrFn, { page, pageSize, args = null, localRegistry
   const offset = page * pageSize - pageSize
 
   const result = await fetcher({ page, pageSize, args })
+
+  if (result === false) return false
+
   if (!registry[registryKey] || result.total !== registry[registryKey].length) {
     registry[registryKey] = new Array(result.total)
   }
