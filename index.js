@@ -43,9 +43,17 @@ async function fetchData (nameOrFn, { page, pageSize, args = null, localRegistry
   items.forEach((item, i) => {
     registry[registryKey][offset + i] = item
   })
+
+  return items
 }
 
-// function getPartition () {}
+function getPartition (nameOrFn, { page, pageSize, args = null, localRegistry = null }) {
+  const registryKey = args ? hash(args) : 'default'
+  const registry = typeof nameOrFn === 'function' ? localRegistry : state.resources[nameOrFn].registry
+  const offset = page * pageSize - pageSize
+
+  return registry[registryKey].slice(offset, offset + pageSize)
+}
 
 export function usePagination (nameOrFn, opts) {
   const localRegistry = reactive({})
@@ -126,7 +134,12 @@ export function usePagination (nameOrFn, opts) {
       return wrapFetchData()
     }
 
-    const partition = getRegistry()[getRegistryKey()].slice(offset.value, offset.value + pageSize.value)
+    const partition = getPartition(nameOrFn, {
+      page: page.value,
+      pageSize: pageSize.value,
+      args: args ? toRaw(args) : null,
+      localRegistry
+    })
     if (partition.includes(undefined)) return wrapFetchData()
   })
 
