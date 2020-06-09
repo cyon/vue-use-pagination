@@ -13,7 +13,7 @@ function unreact (obj) {
     clone = clone.value
   }
 
-  if (typeof clone === 'object') {
+  if (typeof clone === 'object' && clone !== null) {
     Object.keys(clone).map((key) => {
       if (key === '__v_isRef') {
         delete clone[key]
