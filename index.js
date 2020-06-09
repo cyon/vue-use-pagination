@@ -1,8 +1,29 @@
-import { watch, ref, reactive, toRaw, computed } from 'vue'
+import { watch, ref, reactive, toRaw, computed, isReactive, isRef } from 'vue'
 import hash from 'object-hash'
 
 const state = {
   resources: reactive({})
+}
+
+function unreact (obj) {
+  let clone = JSON.parse(JSON.stringify(obj))
+  if (isReactive(clone)) {
+    clone = toRaw(clone)
+  } else if (isRef(clone)) {
+    clone = clone.value
+  }
+
+  if (typeof clone === 'object') {
+    Object.keys(clone).map((key) => {
+      if (key === '__v_isRef') {
+        delete clone[key]
+        return
+      }
+      clone[key] = unreact(clone[key])
+    })
+  }
+
+  return clone
 }
 
 export function createResource (name, fetchPageFn, opts) {
@@ -33,12 +54,13 @@ export function resource (name) {
 }
 
 async function fetchData (nameOrFn, { page, pageSize, args = null, localRegistry = null }) {
+  const cleanArgs = unreact(args)
   const fetcher = typeof nameOrFn === 'function' ? nameOrFn : state.resources[nameOrFn].fn
-  const registryKey = args ? hash(args) : 'default'
+  const registryKey = cleanArgs ? hash(cleanArgs) : 'default'
   const registry = typeof nameOrFn === 'function' ? localRegistry : state.resources[nameOrFn].registry
   const offset = page * pageSize - pageSize
 
-  const result = await fetcher({ page, pageSize, args })
+  const result = await fetcher({ page, pageSize, args: cleanArgs })
 
   if (result === false) return false
 
@@ -58,7 +80,7 @@ async function fetchData (nameOrFn, { page, pageSize, args = null, localRegistry
 }
 
 function getPartition (nameOrFn, { page, pageSize, args = null, localRegistry = null }) {
-  const registryKey = args ? hash(args) : 'default'
+  const registryKey = args ? hash(unreact(args)) : 'default'
   const registry = typeof nameOrFn === 'function' ? localRegistry : state.resources[nameOrFn].registry
   const offset = page * pageSize - pageSize
 
@@ -82,7 +104,7 @@ export function usePagination (nameOrFn, opts) {
   }
 
   const getRegistryKey = () => {
-    return opts.args ? hash(toRaw(opts.args)) : 'default'
+    return opts.args ? hash(unreact(opts.args)) : 'default'
   }
 
   const page = ref(null)
@@ -152,7 +174,7 @@ export function usePagination (nameOrFn, opts) {
     const partition = getPartition(nameOrFn, {
       page: page.value,
       pageSize: pageSize.value,
-      args: args ? toRaw(args) : null,
+      args,
       localRegistry
     })
     if (!partition || partition.includes(undefined)) return wrapFetchData()

@@ -16,7 +16,7 @@ const users = [
 createResource('users', async (opts) => {
   await sleep(2000)
   const offset = opts.page * opts.pageSize - opts.pageSize
-  const count = opts.args.count.value || opts.args.count
+  const count = opts.args.count
 
   return {
     total: users.length,
