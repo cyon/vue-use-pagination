@@ -107,7 +107,19 @@ export function usePagination (nameOrFn, opts) {
     return opts.args ? hash(unreact(opts.args)) : 'default'
   }
 
-  const page = ref(null)
+  const total = computed(() => {
+    if (!getRegistry()[getRegistryKey()]) return 1
+    return getRegistry()[getRegistryKey()].length
+  })
+  const totalPages = computed(() => {
+    return Math.ceil(total.value / pageSize.value)
+  })
+
+  const __page = ref(null)
+  const page = computed({
+    get: () => __page.value,
+    set: (v) => { __page.value = Math.min(Math.max(v, 1), totalPages.value) }
+  })
   const pageSize = ref(null)
 
   const offset = computed(() => {
@@ -128,26 +140,9 @@ export function usePagination (nameOrFn, opts) {
   })
 
   const loading = ref(false)
-  const total = computed(() => {
-    if (!getRegistry()[getRegistryKey()]) return 1
-    return getRegistry()[getRegistryKey()].length
-  })
-  const totalPages = computed(() => {
-    return Math.ceil(total.value / pageSize.value)
-  })
 
   watch([page, pageSize, args, state.resources], async () => {
     if (typeof nameOrFn === 'string' && !state.resources[nameOrFn]) return
-
-    if (page.value < 1) {
-      page.value = 1
-      return
-    }
-
-    if (getRegistry()[getRegistryKey()] && totalPages.value < page.value) {
-      page.value = totalPages.value
-      return
-    }
 
     const wrapFetchData = async () => {
       loading.value = true
