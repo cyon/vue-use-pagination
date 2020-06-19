@@ -115,10 +115,10 @@ export function usePagination (nameOrFn, opts) {
     return Math.ceil(total.value / pageSize.value)
   })
 
-  const __page = ref(null)
+  const _page = ref(null)
   const page = computed({
-    get: () => __page.value,
-    set: (v) => { __page.value = Math.min(Math.max(v, 1), totalPages.value) }
+    get: () => _page.value,
+    set: (v) => { _page.value = Math.min(Math.max(v, 1), totalPages.value) }
   })
   const pageSize = ref(null)
 
