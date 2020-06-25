@@ -1,9 +1,11 @@
-import { watch, ref, reactive, toRaw, computed, isReactive, isRef } from 'vue'
+import { watch, ref, reactive, toRaw, computed, isReactive, isRef, onUnmounted } from 'vue'
 import hash from 'object-hash'
 
 const state = {
   resources: reactive({})
 }
+
+const instances = {}
 
 function unreact (obj) {
   let clone = JSON.parse(JSON.stringify(obj))
@@ -32,6 +34,8 @@ export function createResource (name, fetchPageFn, opts) {
     registry: reactive({}),
     fn: fetchPageFn
   }
+
+  instances[name] = {}
 }
 
 export function resource (name) {
@@ -40,6 +44,9 @@ export function resource (name) {
   return {
     refresh () {
       Object.keys(state.resources[name].registry).forEach(key => delete state.resources[name].registry[key])
+      Object.values(instances[name]).forEach(({ page, pageSize, args }) => {
+        fetchData(name, { page, pageSize, args })
+      })
     },
     async fetchRange ({ page = 1, pageSize = 10, args = null }) {
       const partition = getPartition(name, { page, pageSize, args })
@@ -59,6 +66,14 @@ async function fetchData (nameOrFn, { page, pageSize, args = null, localRegistry
   const registryKey = cleanArgs ? hash(cleanArgs) : 'default'
   const registry = typeof nameOrFn === 'function' ? localRegistry : state.resources[nameOrFn].registry
   const offset = page * pageSize - pageSize
+
+  if (instances[nameOrFn]) {
+    instances[nameOrFn][registryKey] = {
+      args: cleanArgs,
+      page,
+      pageSize
+    }
+  }
 
   const result = await fetcher({ page, pageSize, args: cleanArgs })
 
@@ -141,7 +156,7 @@ export function usePagination (nameOrFn, opts) {
 
   const loading = ref(false)
 
-  watch([page, pageSize, args, state.resources], async () => {
+  watch([page, pageSize, args], async () => {
     if (typeof nameOrFn === 'string' && !state.resources[nameOrFn]) return
 
     const wrapFetchData = async () => {
@@ -177,6 +192,11 @@ export function usePagination (nameOrFn, opts) {
 
   page.value = opts.page || 1
   pageSize.value = opts.pageSize || 10
+
+  onUnmounted(() => {
+    if (!instances[nameOrFn]) return
+    delete instances[nameOrFn]
+  })
 
   return {
     page,
