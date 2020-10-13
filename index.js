@@ -198,12 +198,12 @@ export function usePagination (nameOrFn, opts) {
     delete instances[nameOrFn]
   })
 
-  return {
+  return reactive({
     page,
     pageSize,
     items,
     loading,
     total,
     totalPages
-  }
+  })
 }
