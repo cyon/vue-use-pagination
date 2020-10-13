@@ -1,7 +1,6 @@
 {
   "name": "vue-use-pagination",
   "version": "0.2.7",
-  "private": true,
   "main": "index.js",
   "scripts": {
     "lint": "vue-cli-service lint"
