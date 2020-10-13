@@ -37,11 +37,11 @@ export default {
 
       return {
         total: usersArray.length,
-        items: usersArray.slice(offset, offset + opts.pageSize).map(user => user + opts.args.count.value)
+        items: usersArray.slice(offset, offset + opts.pageSize).map(user => user + opts.args.count)
       }
     }, {
       page: 1,
-      pageSize: 2,
+      pageSize: 4,
       args: reactive({
         count
       })
