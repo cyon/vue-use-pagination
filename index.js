@@ -12,7 +12,7 @@ function unreact (obj) {
   if (isReactive(clone)) {
     clone = toRaw(clone)
   } else if (isRef(clone)) {
-    clone = clone.value
+    clone = clone._value
   }
 
   if (typeof clone === 'object' && clone !== null) {
