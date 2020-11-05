@@ -7,7 +7,7 @@
     "url": "https://github.com/cyon/vue-use-pagination"
   },
   "license": "MIT",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "main": "index.js",
   "scripts": {
     "lint": "vue-cli-service lint"
