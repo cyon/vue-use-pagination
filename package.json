@@ -1,5 +1,12 @@
 {
   "name": "vue-use-pagination",
+  "description": "Use paginated resources in your Vue 3 application",
+  "author": "Max Gfeller <mg@cyon.ch>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cyon/vue-use-pagination"
+  },
+  "license": "MIT",
   "version": "0.3.0",
   "main": "index.js",
   "scripts": {
